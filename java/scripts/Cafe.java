@@ -540,11 +540,11 @@ public class Cafe {
 				String continue_order = in.readLine();
 
 				if (continue_order.equals("no")){
-					System.out.println("Continue_ORDER: " + continue_order);
+		//			System.out.println("Continue_ORDER: " + continue_order);
 					order_repeat = 0;
 					}
 				else if (continue_order.equals("yes")){
-					System.out.println("Continue_ORDER: " + continue_order);
+		//			System.out.println("Continue_ORDER: " + continue_order);
 					order_repeat = 1; //anything beside yes will consider as not continuing.
 					}
 		}while(order_repeat == 1);//Check if user wants to keep ordering, if yes, continue, if no, jump out
@@ -558,10 +558,21 @@ public class Cafe {
 			for(Double d:Total_amount)
 				final_total += d;
 			}//Sum the prices of each order  in the list
- 		//System.out.println(final_total); TEST CORRECTNESS CHECKED
+ 		//System.out.println(final_total); TEST CORRECTNESS, Good
  		
+		// now that we get the total amount of the price, we can insert the query
+
+		String query = String.format("INSERT INTO Orders (login, paid, timeStampRecieved, total) VALUES ('%s', false, NOW(), '%s')", authorisedUser,final_total);
+		//System.out.println(query);
+		esql.executeUpdate(query);
+		System.out.println("Order has been successfully created.");
 		
-      		Integer orderid=0;
+		String select_query = String.format("SELECT orderid FROM Orders O WHERE O.timeStampRecieved = (SELECT MAX(O2.timeStampRecieved) FROM Orders O2 WHERE O2.login = '%s')",authorisedUser); 
+      		//System.out.println(select_query);
+		List <List<String>> Result_id  = esql.executeQueryAndReturnResult(select_query);	
+		String Resultstring_id = (Result_id.get(0)).get(0);
+		Integer orderid = Integer.parseInt(Resultstring_id);
+		System.out.println("Orderid is " + orderid);
 		return orderid;
 	}catch(Exception e){
 		System.err.println (e.getMessage ());
