@@ -23,7 +23,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.ArrayList;
-
+import java.util.*;
 /**
  * This class defines a simple embedded SQL utility class that is designed to
  * work with PostgreSQL JDBC drivers.
@@ -488,11 +488,85 @@ public class Cafe {
    }//end
 
    public static Integer AddOrder(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
-      Integer orderid=0;
-      return orderid;
+     try{
+		List<Double> Total_amount = new ArrayList<Double>();
+		int order_repeat = 0; //counter for repeating order	
+		String order = "";
+		int rowcount_find = 0;
+		do{
+			//check if the item user wants to order is valid
+			do{
+				System.out.print("\tEnter the name of the item: ");
+				order = in.readLine();
+				String query_findname = String.format("SELECT * FROM Menu M WHERE M.ItemName = '%s'", order);
+				rowcount_find = esql.executeQuery(query_findname);
+			if (rowcount_find == 0){
+				System.out.println("\tSorry, we can't match the name of the item that you want to buy");
+				order_repeat = 1;
+				}
+			else{
+				order_repeat = 0;
+				}
+
+			}while(order_repeat == 1);
+
+				//check if the user enter in the valid amount number
+			do{
+				System.out.print("\tEnter the amount of order (cannont be negative): ");
+				String Str_amount_order = in.readLine();
+		      		int amount_order = Integer.parseInt(Str_amount_order); //changing the string to integer.			
+				if (amount_order < 0){
+					System.out.println("\tSorry, we do not accept negative number here, please re-enter a 0 or positive number");						order_repeat = 1;//ask for re-ordering
+				
+					}
+					else if (amount_order >= 1){ //if the user enters in a valid number, store the order(s) price in the list
+						while(amount_order != 0){
+							String find_price_query = String.format("SELECT M.price FROM Menu M WHERE M.ItemName = '%s'", order);
+							List <List<String>> each_price  = esql.executeQueryAndReturnResult(find_price_query);	
+							String Resultstring = (each_price.get(0)).get(0);
+							Double resultprice = Double.parseDouble(Resultstring);
+							Total_amount.add(resultprice);
+							amount_order--;
+							}
+						order_repeat = 0;
+						}
+					else if (amount_order == 0){// if the use enters in 0, cancel the order (which means do nothing)
+						System.out.println("\tOrder Cancelled");
+						order_repeat = 0;
+						}
+				}while(order_repeat == 1);
+	
+				System.out.print("\tDo you want anything else?(yes/no): ");
+				String continue_order = in.readLine();
+
+				if (continue_order.equals("no")){
+					System.out.println("Continue_ORDER: " + continue_order);
+					order_repeat = 0;
+					}
+				else if (continue_order.equals("yes")){
+					System.out.println("Continue_ORDER: " + continue_order);
+					order_repeat = 1; //anything beside yes will consider as not continuing.
+					}
+		}while(order_repeat == 1);//Check if user wants to keep ordering, if yes, continue, if no, jump out
+			
+		Double final_total = 0.0;
+		if (Total_amount.isEmpty())
+		{
+			return 0;
+		}
+		else{
+			for(Double d:Total_amount)
+				final_total += d;
+			}//Sum the prices of each order  in the list
+ 		//System.out.println(final_total); TEST CORRECTNESS CHECKED
+ 		
+		
+      		Integer orderid=0;
+		return orderid;
+	}catch(Exception e){
+		System.err.println (e.getMessage ());
+		return 0;
+	}
    }//end 
 
    public static void UpdateOrder(Cafe esql){
