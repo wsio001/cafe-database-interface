@@ -18,6 +18,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.io.File;
+import java.sql.Timestamp;
+import java.text.*;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -493,6 +495,8 @@ public class Cafe {
 		int order_repeat = 0; //counter for repeating order	
 		String order = "";
 		int rowcount_find = 0;
+		Map<String, String> itemANDcomment = new HashMap<String, String>();
+		Set<String>all_order = new HashSet<String>();
 		do{
 			//check if the item user wants to order is valid
 			do{
@@ -516,22 +520,33 @@ public class Cafe {
 				String Str_amount_order = in.readLine();
 		      		int amount_order = Integer.parseInt(Str_amount_order); //changing the string to integer.			
 				if (amount_order < 0){
-					System.out.println("\tSorry, we do not accept negative number here, please re-enter a 0 or positive number");						order_repeat = 1;//ask for re-ordering
-				
+					System.out.println("\tSorry, we do not accept negative number here, please re-enter a 0 or positive number");					
+					order_repeat = 1;//ask for re-ordering
 					}
-					else if (amount_order >= 1){ //if the user enters in a valid number, store the order(s) price in the list
-						while(amount_order != 0){
-							String find_price_query = String.format("SELECT M.price FROM Menu M WHERE M.ItemName = '%s'", order);
-							List <List<String>> each_price  = esql.executeQueryAndReturnResult(find_price_query);	
-							String Resultstring = (each_price.get(0)).get(0);
-							Double resultprice = Double.parseDouble(Resultstring);
-							Total_amount.add(resultprice);
-							amount_order--;
+				else if (amount_order >= 1){ //if the user enters in a valid number, store the order(s) price in the list
+					while(amount_order != 0){
+						String find_price_query = String.format("SELECT M.price FROM Menu M WHERE M.ItemName = '%s'", order);
+						List <List<String>> each_price  = esql.executeQueryAndReturnResult(find_price_query);	
+						String Resultstring = (each_price.get(0)).get(0);
+						Double resultprice = Double.parseDouble(Resultstring);
+						Total_amount.add(resultprice);
+						amount_order--;
 							}
 						order_repeat = 0;
+
+						System.out.print("Have any comment on this item?(type 'null' if you have no comment): ");
+						String comment = in.readLine();
+						
+						if (itemANDcomment.containsKey(order)){
+							itemANDcomment.put(order,itemANDcomment.get(order) + "\\" + comment);
 						}
+						else{
+							itemANDcomment.put(order,comment);
+						}//if the item name exist, then comment can just be added after the first comment with '\\' serve as seperator.
+						all_order.add(order);	
+					}	
 					else if (amount_order == 0){// if the use enters in 0, cancel the order (which means do nothing)
-						System.out.println("\tOrder Cancelled");
+						System.out.println("Order Cancelled");
 						order_repeat = 0;
 						}
 				}while(order_repeat == 1);
@@ -550,8 +565,7 @@ public class Cafe {
 		}while(order_repeat == 1);//Check if user wants to keep ordering, if yes, continue, if no, jump out
 			
 		Double final_total = 0.0;
-		if (Total_amount.isEmpty())
-		{
+		if (Total_amount.isEmpty()){
 			return 0;
 		}
 		else{
@@ -567,11 +581,19 @@ public class Cafe {
 		esql.executeUpdate(query);
 		System.out.println("Order has been successfully created.");
 		
-		String select_query = String.format("SELECT orderid FROM Orders O WHERE O.timeStampRecieved = (SELECT MAX(O2.timeStampRecieved) FROM Orders O2 WHERE O2.login = '%s')",authorisedUser); 
+		String select_query = String.format("SELECT orderid, timeStampRecieved FROM Orders O WHERE O.timeStampRecieved = (SELECT MAX(O2.timeStampRecieved) FROM Orders O2 WHERE O2.login = '%s')",authorisedUser); 
       		//System.out.println(select_query);
 		List <List<String>> Result_id  = esql.executeQueryAndReturnResult(select_query);	
 		String Resultstring_id = (Result_id.get(0)).get(0);
 		Integer orderid = Integer.parseInt(Resultstring_id);
+		String timeRecieved = (Result_id.get(0)).get(1);
+		Timestamp s = Timestamp.valueOf(timeRecieved);
+		System.out.println(s);
+		for (Iterator<String> it = all_order.iterator(); it.hasNext();){
+			String a = it.next();
+			String item_status_query = String.format("INSERT INTO ItemStatus (orderid, itemName, lastUpdated, status, comments) VALUES ('%s', '%s', '%s', 'Has Not Started', '%s')" ,orderid, a, s,itemANDcomment.get(a));
+			esql.executeUpdate(item_status_query);
+		}
 		System.out.println("Orderid is " + orderid);
 		return orderid;
 	}catch(Exception e){
@@ -581,9 +603,33 @@ public class Cafe {
    }//end 
 
    public static void UpdateOrder(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
+/*	List<List<String>> result_storage  = new ArrayList<List<String>>(); 
+	try{//check user type to see what he/she can update
+		int repeat_prompt = 0; //counter to repeat the prompt
+		do{
+			System.out.print("Enter in the order ID: );
+			String orderid = in.readlne();
+			String match_query = String.format("SELECT paid FROM Orders O WHERE O.login = '%s' AND O.orderid = '%s')",authorisedUser, orderid);//use "select paid" becasue so that we can reuse this string
+			int rowcount = esql.executeQuery(match_query);
+			//check if the orderid he enters is made under his name
+			if (rowcount == 0){//orderid cant be find under user's name	
+				System.out.println("Sorry, we cannot find your order, please re-enter the orderid.");
+				repeat_prompt = 1;
+			}
+			else {//orderid found, then check if the order has been paid.
+				result_storage = esql.executeQueryAndReturnResult(match_query);
+				String paidornot = (result_storage.get(0)).get(0);
+				if (paidornot.equals("true"){
+					System.out.println("Sorry, this order can't be change because it has been paid.");
+					repeat_prompt = 1;
+				}//if it is paid, reprompt the user to enter in new orderid.
+				else{
+						
+			
+	}catch(Exception e){
+		System.err.println (e.getMessage ());
+		return 0;
+	}*/
    }//end
 
    public static void EmployeeUpdateOrder(Cafe esql){
