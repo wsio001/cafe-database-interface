@@ -29,9 +29,10 @@ CREATE TABLE Orders(
 
 CREATE TABLE ItemStatus(
 	orderid integer,
-	itemName char(50), 
+	itemName char(50),
+	amount Integer,
 	lastUpdated timestamp NOT NULL,
-	status char(20), 
+	status char(20),
 	comments char(130), 
 	PRIMARY KEY(orderid,itemName),
 	FOREIGN KEY(orderid) REFERENCES Orders(orderid),
