@@ -495,6 +495,7 @@ public class Cafe {
 		int order_repeat = 0; //counter for repeating order	
 		String order = "";
 		int rowcount_find = 0;
+		Map<String, Integer> itemANDamount = new HashMap<String, Integer>();
 		Map<String, String> itemANDcomment = new HashMap<String, String>();
 		Set<String>all_order = new HashSet<String>();
 		do{
@@ -524,6 +525,15 @@ public class Cafe {
 					order_repeat = 1;//ask for re-ordering
 					}
 				else if (amount_order >= 1){ //if the user enters in a valid number, store the order(s) price in the list
+				
+					int temp_ao = amount_order; //store the amount order the number would be lost
+					if (itemANDamount.containsKey(order)){
+						itemANDamount.put(order,itemANDamount.get(order) + temp_ao);
+						}
+					else{
+						itemANDamount.put(order,temp_ao);
+						}
+					
 					while(amount_order != 0){
 						String find_price_query = String.format("SELECT M.price FROM Menu M WHERE M.ItemName = '%s'", order);
 						List <List<String>> each_price  = esql.executeQueryAndReturnResult(find_price_query);	
@@ -588,10 +598,9 @@ public class Cafe {
 		Integer orderid = Integer.parseInt(Resultstring_id);
 		String timeRecieved = (Result_id.get(0)).get(1);
 		Timestamp s = Timestamp.valueOf(timeRecieved);
-		System.out.println(s);
 		for (Iterator<String> it = all_order.iterator(); it.hasNext();){
 			String a = it.next();
-			String item_status_query = String.format("INSERT INTO ItemStatus (orderid, itemName, lastUpdated, status, comments) VALUES ('%s', '%s', '%s', 'Has Not Started', '%s')" ,orderid, a, s,itemANDcomment.get(a));
+			String item_status_query = String.format("INSERT INTO ItemStatus (orderid, itemName, amount,lastUpdated, status, comments) VALUES ('%s', '%s', '%s', '%s', 'Has Not Started', '%s')" ,orderid, a,itemANDamount.get(a), s,itemANDcomment.get(a));
 			esql.executeUpdate(item_status_query);
 		}
 		System.out.println("Orderid is " + orderid);
@@ -603,13 +612,13 @@ public class Cafe {
    }//end 
 
    public static void UpdateOrder(Cafe esql){
-/*	List<List<String>> result_storage  = new ArrayList<List<String>>(); 
+	List<List<String>> result_storage  = new ArrayList<List<String>>(); 
 	try{//check user type to see what he/she can update
 		int repeat_prompt = 0; //counter to repeat the prompt
 		do{
-			System.out.print("Enter in the order ID: );
-			String orderid = in.readlne();
-			String match_query = String.format("SELECT paid FROM Orders O WHERE O.login = '%s' AND O.orderid = '%s')",authorisedUser, orderid);//use "select paid" becasue so that we can reuse this string
+			System.out.print("Enter in the order ID: ");
+			String orderid = in.readLine();
+			String match_query = String.format("SELECT paid FROM Orders O WHERE O.login = '%s' AND O.orderid = '%s'",authorisedUser, orderid);//use "select paid" becasue so that we can reuse this string
 			int rowcount = esql.executeQuery(match_query);
 			//check if the orderid he enters is made under his name
 			if (rowcount == 0){//orderid cant be find under user's name	
@@ -619,17 +628,159 @@ public class Cafe {
 			else {//orderid found, then check if the order has been paid.
 				result_storage = esql.executeQueryAndReturnResult(match_query);
 				String paidornot = (result_storage.get(0)).get(0);
-				if (paidornot.equals("true"){
+				if (paidornot.equals("true")){
 					System.out.println("Sorry, this order can't be change because it has been paid.");
 					repeat_prompt = 1;
 				}//if it is paid, reprompt the user to enter in new orderid.
 				else{
-						
-			
+					repeat_prompt = 0;
+					List<Double> Total_amount = new ArrayList<Double>();
+					int order_repeat = 0; //counter for repeating order	
+					String order = "";
+					int rowcount_find = 0;
+					Map<String, Integer> itemANDamount = new HashMap<String, Integer>();
+					Map<String, String> itemANDcomment = new HashMap<String, String>();
+					Set<String>all_order = new HashSet<String>();
+					do{
+						//check if the item user wants to order is valid
+						do{
+							System.out.print("\tEnter the name of the item: ");
+							order = in.readLine();
+							String query_findname = String.format("SELECT * FROM Menu M WHERE M.ItemName = '%s'", order);
+							rowcount_find = esql.executeQuery(query_findname);
+						if (rowcount_find == 0){
+							System.out.println("\tSorry, we can't match the name of the item that you want to buy");
+							order_repeat = 1;
+							}
+						else{
+							order_repeat = 0;
+							}
+
+						}while(order_repeat == 1);
+
+							//check if the user enter in the valid amount number
+						do{
+							System.out.print("\tEnter the amount of order (enter negative if you want to lower the amount): ");
+							String Str_amount_order = in.readLine();
+							int amount_order = Integer.parseInt(Str_amount_order); //changing the string to integer.			
+							
+							if (amount_order < 0){
+								int temp_ao = amount_order;
+								if (itemANDamount.containsKey(order)){
+									itemANDamount.put(order,itemANDamount.get(order) + temp_ao);
+								}
+								else{ 
+									itemANDamount.put(order,temp_ao);
+								}
+								
+								while(amount_order != 0){
+									String find_price_query = String.format("SELECT M.price FROM Menu M WHERE M.ItemName = '%s'", order);
+									List <List<String>> each_price  = esql.executeQueryAndReturnResult(find_price_query);	
+									String Resultstring = (each_price.get(0)).get(0);
+									Double resultprice = Double.parseDouble(Resultstring);
+									resultprice = resultprice * -1;
+									Total_amount.add(resultprice);
+									amount_order++;
+										}
+									order_repeat = 0;
+
+									System.out.print("Have any comment on this item?(type 'null' if you have no comment): ");
+									String comment = in.readLine();
+									
+									if (itemANDcomment.containsKey(order)){
+										itemANDcomment.put(order,itemANDcomment.get(order) + "\\" + comment);
+									}
+									else{
+										itemANDcomment.put(order,comment);
+									}//if the item name exist, then comment can just be added after the first comment with '\\' serve as seperator.
+									all_order.add(order);	
+								}	
+							else if (amount_order >= 1){ //if the user enters in a valid number, store the order(s) price in the list
+							
+								int temp_ao = amount_order; //store the amount order the number would be lost
+								if (itemANDamount.containsKey(order)){
+									itemANDamount.put(order,itemANDamount.get(order) + temp_ao);
+									}
+								else{
+									itemANDamount.put(order,temp_ao);
+									}
+								
+								while(amount_order != 0){
+									String find_price_query = String.format("SELECT M.price FROM Menu M WHERE M.ItemName = '%s'", order);
+									List <List<String>> each_price  = esql.executeQueryAndReturnResult(find_price_query);	
+									String Resultstring = (each_price.get(0)).get(0);
+									Double resultprice = Double.parseDouble(Resultstring);
+									Total_amount.add(resultprice);
+									amount_order--;
+										}
+									order_repeat = 0;
+
+									System.out.print("Have any comment on this item?(type 'null' if you have no comment): ");
+									String comment = in.readLine();
+									
+									if (itemANDcomment.containsKey(order)){
+										itemANDcomment.put(order,itemANDcomment.get(order) + "\\" + comment);
+									}
+									else{
+										itemANDcomment.put(order,comment);
+									}//if the item name exist, then comment can just be added after the first comment with '\\' serve as seperator.
+									all_order.add(order);	
+								}	
+								else if (amount_order == 0){// if the use enters in 0, cancel the order (which means do nothing)
+									System.out.println("Update Cancelled");
+									order_repeat = 0;
+									}
+							}while(order_repeat == 1);
+				
+							System.out.print("\tDo you want anything else?(yes/no): ");
+							String continue_order = in.readLine();
+
+							if (continue_order.equals("no")){
+					//			System.out.println("Continue_ORDER: " + continue_order);
+								order_repeat = 0;
+								}
+							else if (continue_order.equals("yes")){
+					//			System.out.println("Continue_ORDER: " + continue_order);
+								order_repeat = 1; //anything beside yes will consider as not continuing.
+								}
+					}while(order_repeat == 1);//Check if user wants to keep ordering, if yes, continue, if no, jump out
+					Double update_total = 0.0;
+					if (Total_amount.isEmpty()){
+						return;
+					}
+					else{
+						for(Double d:Total_amount)
+							update_total += d;
+						}//Sum the prices of each order  in the list that need to update to order
+					//System.out.println(final_total); TEST CORRECTNESS, Good
+					
+					// now that we get the total amount of the price, we can insert the query
+
+					String query = String.format("UPDATE Orders SET total = total+'%s' WHERE orderid = '%s'",update_total, orderid);
+					//System.out.println(query);
+					esql.executeUpdate(query);
+					System.out.println("Order has been successfully updated.");
+					
+					for (Iterator<String> it = all_order.iterator(); it.hasNext();){
+						String a = it.next();
+						String test = String.format("SELECT * FROM ItemStatus I WHERE I.orderid = '%s' AND itemName = '%s'", orderid, a);
+						int test_rownum = esql.executeQuery(test);
+						if (test_rownum == 0){
+						String item_status_query = String.format("INSERT INTO ItemStatus (orderid, itemName, amount,lastUpdated, status, comments) VALUES ('%s', '%s', '%s', NOW(), 'Has Not Started', '%s')" ,orderid, a,itemANDamount.get(a), itemANDcomment.get(a));
+						esql.executeUpdate(item_status_query);
+						}
+						else{
+						String item_status_query = String.format("UPDATE ItemStatus SET amount = amount+'%s', lastUpdated = NOW(), comments = '%s' WHERE orderid = '%s' AND itemName = '%s'", itemANDamount.get(a), itemANDcomment.get(a), orderid,a); 
+						esql.executeUpdate(item_status_query);
+						}
+					} 
+				}
+			}
+		}while(repeat_prompt == 1);
 	}catch(Exception e){
 		System.err.println (e.getMessage ());
-		return 0;
-	}*/
+		return;
+	}
    }//end
 
    public static void EmployeeUpdateOrder(Cafe esql){
