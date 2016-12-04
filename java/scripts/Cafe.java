@@ -396,13 +396,37 @@ public class Cafe {
     **/
    public static void CreateUser(Cafe esql){
       try{
-         System.out.print("\tEnter user login: ");
-         String login = in.readLine();
-         System.out.print("\tEnter user password: ");
-         String password = in.readLine();
+	 String login = "";
+	 String password = "";
+	 String phone = "";
+	 int prompt_r = 0;
+	 do{
+         	System.out.print("\tEnter user login: ");
+         	login = in.readLine();
+		if (login.isEmpty() || login.trim().isEmpty()){
+			System.out.println("login cant be empty");
+			prompt_r = 1;
+		}
+		else{
+			prompt_r = 0;
+		}
+	}while(prompt_r == 1);
+	do{
+         	System.out.print("\tEnter user password: ");
+         	password = in.readLine();
+		if (password.isEmpty() || password.trim().isEmpty()){
+			System.out.println("password cant be empty");
+			prompt_r = 1;
+		}
+		else{
+			prompt_r =0;
+		}
+	}while(prompt_r == 1);
          System.out.print("\tEnter user phone: ");
-         String phone = in.readLine();
-         
+         phone = in.readLine();
+		if (phone.isEmpty() || phone.trim().isEmpty()){
+			phone = "";
+		}
 	 String type="Customer";
 	 String favItems="";
 
@@ -931,25 +955,43 @@ public class Cafe {
 		System.out.println("\t1.password");
 		System.out.println("\t2.phone number");
 		System.out.println("\t3.favorite item");
-	 	int input = readChoice();
 		int prompt_r = 0;
+		String np = "";
+		String nnum = "";
+		String nf = "";
 		do{
+	 	int input = readChoice();
 		prompt_r = 0;
 		if (input == 1){
-			System.out.println("\tEnter the new password: ");
-			String np = in.readLine();
-			update_query = String.format("UPDATE Users SET password = '%s' WHERE login = '%s'",np,authorisedUser);
-			esql.executeUpdate(update_query);
+			do{
+				System.out.println("\tEnter the new password: ");
+				np = in.readLine();
+				if (np.isEmpty() || np.trim().isEmpty()){
+					System.out.println("new password cannot be empty");
+					prompt_r = 1;
+				}
+				else{
+					prompt_r = 0;
+				}
+			}while(prompt_r ==1);
+				update_query = String.format("UPDATE Users SET password = '%s' WHERE login = '%s'",np,authorisedUser);
+				esql.executeUpdate(update_query);
 		}
 		else if (input == 2){
 			System.out.println("\tEnter the new phone number: ");
-			String nnum = in.readLine();
+			nnum = in.readLine();
+				if (nnum.isEmpty() || nnum.trim().isEmpty()){
+					nnum = "";
+				}
 			update_query = String.format("UPDATE Users SET phoneNum = '%s' WHERE login = '%s'",nnum,authorisedUser);
 			esql.executeUpdate(update_query);
 		}
 		else if (input == 3){
 			System.out.println("\tEnter your favorite item: ");
-			String nf = in.readLine();
+			 nf = in.readLine();
+				if (nf.isEmpty()|| nf.trim().isEmpty()){
+					nf ="";
+				}
 			update_query = String.format("UPDATE Users SET favItems = favItems ||' / '||'%s' WHERE login = '%s'",nf,authorisedUser);
 			esql.executeUpdate(update_query);
 		}
@@ -1012,8 +1054,9 @@ public class Cafe {
 						prompt_r = 1;
 					}
 				}while(prompt_r == 1);
+			default: System.out.println("Unrecognized Choice!!");
 			System.out.println("Update Successfully");		
-		}
+		}//end switch
 		return;
 	}
 	catch(Exception e){
@@ -1023,9 +1066,198 @@ public class Cafe {
    }//end
 
    public static void UpdateMenu(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
+	try{
+		System.out.println("\tWhat action do you want to take?: ");
+		System.out.println("\t1.add");
+		System.out.println("\t2.update");
+		System.out.println("\t3.delete");
+		String itemName = "";
+		String type = "";
+		double price = 0.0;
+		String desrcb = "";
+		String URL = "";
+		String update_query = "";
+		String select_query = "";
+		int prompt_r = 0;
+			String S_itemName = "";
+		switch(readChoice()){
+			case 1: 
+				do{
+					System.out.println("\tEnter the itemName: ");
+					itemName = in.readLine();
+					if (itemName.isEmpty() || (itemName.trim()).isEmpty()){
+						System.out.println("itemName cant be empty");
+						prompt_r = 1;
+					}
+					else{
+						prompt_r = 0;
+					}
+				}while(prompt_r == 0);
+				do{
+					System.out.println("\tEnter the type for this item: ");
+					type = in.readLine();
+					if (type.isEmpty() || (type.trim()).isEmpty()){
+						System.out.println("type cant be empty");
+						prompt_r = 1;
+					}
+					else{
+						prompt_r = 0;
+					}
+				}while(prompt_r == 0);
+				do{
+					try{
+						do{
+							System.out.println("\tEnter the price for this item: ");
+							String temp_price = in.readLine();
+							price = Double.parseDouble(temp_price);
+							if (price <= 0)
+							{
+								System.out.println("You can only enter positive numbers");
+								prompt_r = 1;
+							}
+							else {
+								prompt_r = 0;
+							}
+						}while(prompt_r == 1);
+						break;
+					}
+					catch(NumberFormatException e){
+						System.out.println("You can only enter positive numbers");
+						continue;
+					}
+				}while(true);
+				System.out.println("\tEnter the description");
+				desrcb = in.readLine();
+				if(desrcb.isEmpty()||desrcb.trim().isEmpty()){
+					desrcb = "";
+				}
+				System.out.println("\tEnter the URL");
+				URL = in.readLine();
+				if (URL.isEmpty()||URL.trim().isEmpty()){
+					URL = "";
+				}
+				update_query = String.format("INSERT INTO Menu (itemName, type, price, description, imageURL) VALUES ( '%s', '%s', '%s', '%s', '%s')", itemName,type,price,desrcb,URL);
+				esql.executeUpdate(update_query);
+	 			System.out.println("Added Succesfully");
+			case 2:
+				String np = "";
+				String nnum = "";
+				int rowcount = 0;
+				do{
+					System.out.println("\tWhat is the name of the item you want to update");
+					S_itemName = in.readLine();
+					select_query = String.format("SELECT * FROM Menu WHERE itemName = '%s'",S_itemName);
+					rowcount = esql.executeQuery(select_query);
+					if(rowcount == 0){
+						System.out.println("Sorry, we cannot find the item that you are looking for.");
+						prompt_r = 1;
+					}
+					else{
+						prompt_r = 0;
+					}
+				}while(prompt_r == 1);
+
+				System.out.println("\tWhat do you want to update?");
+				System.out.println("\t1.itemName");
+				System.out.println("\t2.type");
+				System.out.println("\t3.price");
+				System.out.println("\t4.description");
+				System.out.println("\t5.imageURL");
+				do{
+	 				int input = readChoice();
+					prompt_r = 0;
+					if (input == 1){
+						do{
+							System.out.println("\tEnter the new itemName: ");
+							np = in.readLine();
+							if (np.isEmpty() || np.trim().isEmpty()){
+								System.out.println("new itemName cannot be empty");
+								prompt_r = 1;
+							}	
+							else{
+								prompt_r = 0;
+							}
+						}while(prompt_r ==1);
+						update_query = String.format("UPDATE Menu SET itemName = '%s' WHERE itemName = '%s'",np,S_itemName);
+						esql.executeUpdate(update_query);
+					}
+					else if (input == 2){
+						System.out.println("\tEnter the new type for the item: ");
+						nnum = in.readLine();
+						do{
+							if (nnum.isEmpty() || nnum.trim().isEmpty()){
+								System.out.println("new type for the item cannot be empty");
+								prompt_r = 1;
+							}
+							else{
+								prompt_r = 0;
+							}
+						}while(prompt_r == 1);
+						update_query = String.format("UPDATE Menu SET type  = '%s' WHERE itemName = '%s'",nnum,S_itemName);
+						esql.executeUpdate(update_query);
+					}
+					else if (input == 3){
+						do{
+							try{
+								do{
+									System.out.println("\tEnter the new price for this item: ");
+									String temp_price = in.readLine();
+									price = Double.parseDouble(temp_price);
+									if (price <= 0)
+									{
+										System.out.println("You can only enter positive numbers");
+										prompt_r = 1;
+									}
+									else {
+										prompt_r = 0;
+									}
+								}while(prompt_r == 1);
+							break;
+							}
+							catch(NumberFormatException e){
+								System.out.println("You can only enter positive numbers");
+								continue;
+							}
+						}while(true);
+		
+						update_query = String.format("UPDATE Menu SET price = '%s' WHERE itemName = '%s'",price,S_itemName);
+						esql.executeUpdate(update_query);
+					}
+					else if (input == 4){
+						System.out.println("\tEnter the description");
+						desrcb = in.readLine();
+						if(desrcb.isEmpty()||desrcb.trim().isEmpty()){
+							desrcb = "";
+						}
+						update_query = String.format("UPDATE Menu SET description = '%s' WHERE itemName = '%s'",desrcb,S_itemName);
+						esql.executeUpdate(update_query);
+					}
+					else if (input == 5){
+						System.out.println("\tEnter the URL");
+						URL = in.readLine();
+						if(URL.isEmpty()||URL.trim().isEmpty()){
+							URL = "";
+						}
+						update_query = String.format("UPDATE Menu SET URL = '%s' WHERE itemName = '%s'",URL,S_itemName);
+						esql.executeUpdate(update_query);
+					}
+					else{
+						System.out.println("Unrecgonized Choice!!");
+						prompt_r = 1;
+					}	
+				}while(prompt_r == 1);
+				System.out.println("Update Successfully");
+			case 3:
+				System.out.println("\tWhat is the name of the item you want to delete");
+				S_itemName = in.readLine();
+				select_query = String.format("DELETE * FROM Menu WHERE itemName = '%s'",S_itemName);
+ 
+		}//end switch		
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage());
+		return;
+	}
    }//end
 
    public static void ViewOrderStatus(Cafe esql){

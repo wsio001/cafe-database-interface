@@ -4,4 +4,5 @@
 # UpdateOrder function: User can adjust their order, however, they cannot lower the amount of the original order to less than 0. Also comment will entirely be replaced. itemStatus that has amount = or less than 0 will be erased.
 # User can now view it's history.
 # User can now update it's info.
-# Manager can now update it's info and other's type
+# Manager can now update it's info and other's ueser type
+# Manager can now modify the menu
