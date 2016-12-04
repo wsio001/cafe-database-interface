@@ -932,6 +932,9 @@ public class Cafe {
 		System.out.println("2.phone number");
 		System.out.println("3.favorite item");
 	 	int input = readChoice();
+		int prompt_r = 0;
+		do{
+		prompt_r = 0;
 		if (input == 1){
 			System.out.println("Enter the new password: ");
 			String np = in.readLine();
@@ -950,6 +953,11 @@ public class Cafe {
 			update_query = String.format("UPDATE Users SET favItems = favItems ||' / '||'%s' WHERE login = '%s'",nf,authorisedUser);
 			esql.executeUpdate(update_query);
 		}
+		else{
+			System.out.println("Unrecgonized Choice!!");
+			prompt_r = 1;
+		}
+		}while(prompt_r == 1);
 		return;	
 	}
 	catch(Exception e){
