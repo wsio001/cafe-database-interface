@@ -560,18 +560,27 @@ public class Cafe {
 						order_repeat = 0;
 						}
 				}while(order_repeat == 1);
-	
-				System.out.print("\tDo you want anything else?(yes/no): ");
-				String continue_order = in.readLine();
+				
+				int prompt_r = 0;
 
-				if (continue_order.equals("no")){
-		//			System.out.println("Continue_ORDER: " + continue_order);
-					order_repeat = 0;
+				do{
+					prompt_r = 0;
+					System.out.print("\tDo you want anything else?(yes/no): ");
+					String continue_order = in.readLine();
+
+					if (continue_order.equals("no")){
+		//				System.out.println("Continue_ORDER: " + continue_order);
+						order_repeat = 0;
+						}
+					else if (continue_order.equals("yes")){
+		//				System.out.println("Continue_ORDER: " + continue_order);
+						order_repeat = 1; //anything beside yes will consider as not continuing.
 					}
-				else if (continue_order.equals("yes")){
-		//			System.out.println("Continue_ORDER: " + continue_order);
-					order_repeat = 1; //anything beside yes will consider as not continuing.
+					else {
+						System.out.println("Unrecgonized Choice!!");
+						prompt_r = 1;
 					}
+				}while(prompt_r == 1);
 		}while(order_repeat == 1);//Check if user wants to keep ordering, if yes, continue, if no, jump out
 			
 		Double final_total = 0.0;
@@ -616,7 +625,7 @@ public class Cafe {
 	try{//check user type to see what he/she can update
 		int repeat_prompt = 0; //counter to repeat the prompt
 		do{
-			System.out.print("Enter in the order ID: ");
+			System.out.print("\tEnter in the order ID: ");
 			String orderid = in.readLine();
 			String match_query = String.format("SELECT paid FROM Orders O WHERE O.login = '%s' AND O.orderid = '%s'",authorisedUser, orderid);//use "select paid" becasue so that we can reuse this string
 			int rowcount = esql.executeQuery(match_query);
@@ -734,15 +743,23 @@ public class Cafe {
 				
 							System.out.print("\tDo you want anything else?(yes/no): ");
 							String continue_order = in.readLine();
+							int prompt_r = 0;
 
-							if (continue_order.equals("no")){
+							do {
+								prompt_r = 0;
+								if (continue_order.equals("no")){
 					//			System.out.println("Continue_ORDER: " + continue_order);
 								order_repeat = 0;
 								}
-							else if (continue_order.equals("yes")){
+								else if (continue_order.equals("yes")){
 					//			System.out.println("Continue_ORDER: " + continue_order);
 								order_repeat = 1; //anything beside yes will consider as not continuing.
 								}
+								else{
+									System.out.println("Unrecgonized Choice!!");
+									prompt_r = 1;
+								}
+							}while(prompt_r == 1);
 					}while(order_repeat == 1);//Check if user wants to keep ordering, if yes, continue, if no, jump out
 					Double update_total = 0.0;
 					if (Total_amount.isEmpty()){
@@ -777,6 +794,8 @@ public class Cafe {
 				}
 			}
 		}while(repeat_prompt == 1);
+	String delete_query = String.format("DELETE * FROM ItemStatus WHERE amount =< 0");
+	//delete ItemStatus that has the amount of 0 or negative
 	}catch(Exception e){
 		System.err.println (e.getMessage ());
 		return;
@@ -784,21 +803,159 @@ public class Cafe {
    }//end
 
    public static void EmployeeUpdateOrder(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
+	List<List<String>> result_storage  = new ArrayList<List<String>>(); 
+	try{//check user type to see what he/she can update
+		int repeat_prompt = 0; //counter to repeat the prompt
+		String status_change = "";
+		System.out.print("\t Do you want to update your own order or someone else's (1=yourself,2=others)?  ");
+		String choice_1 = in.readLine();
+		if (choice_1.equals("1")){
+			UpdateOrder(esql);
+			return;
+		}
+		else if(choice_1.equals("2")){
+		do{
+			System.out.print("\tEnter in the order ID: ");
+			String orderid = in.readLine();
+			String match_query = String.format("SELECT paid FROM Orders O WHERE O.login = '%s' AND O.orderid = '%s'",authorisedUser, orderid);//use "select paid" becasue so that we can reuse this string
+			int rowcount = esql.executeQuery(match_query);
+			//check if the orderid he enters is made under his name
+			if (rowcount == 0){//orderid cant be find under user's name	
+				System.out.println("Sorry, we cannot find your order, please re-enter the orderid.");
+				repeat_prompt = 1;
+			}
+			else{
+				result_storage = esql.executeQueryAndReturnResult(match_query);
+				String paidornot = (result_storage.get(0)).get(0);
+				if (paidornot.equals("false")){
+					int prompt_r = 0;
+
+					do{
+					prompt_r = 0;
+					System.out.println("This order has not been paid yet, would you want to change it to paid?(y/n) ");
+					String paid_change = in.readLine();
+					if(paid_change.equals("y")){
+						paid_change = String.format("UPDATE Orders SET paid = 'true' WHERE orderid = '%s'",orderid);	
+						esql.executeUpdate(paid_change);
+						}
+					else if (paid_change.equals("n")){
+						return;
+						}
+					else{
+						System.out.println("Unrecgonized choice!!");
+						prompt_r = 1;
+					}
+					}while(prompt_r == 1);
+				}	
+				String Select_query = String.format("SELECT * FROM ItemStatus I WHERE I.orderid = '%s'", orderid);
+				rowcount = esql.executeQueryAndPrintResult(Select_query); 
+				System.out.println("Which item do you want to update? ");
+				String choice = in.readLine();
+				Select_query = String.format("Select status FROM ItemStatus I WHERE I.orderid = '%s' AND I.itemName = '%s'",orderid, choice);
+				result_storage = esql.executeQueryAndReturnResult(Select_query);
+				String status =  (result_storage.get(0)).get(0);
+				if (status.equals("Has Not Started")){
+					System.out.println("\tIt has not started yet, want to change it to Started?(y/n) ");
+					choice = in.readLine();
+					int prompt_r = 0;
+
+					do{
+					prompt_r = 0;
+					if (choice.equals("y")){
+						status_change = String.format("UPDATE itemStatus SET status = 'Started' WHERE orderid = '%s' AND itemName = '%s'", orderid, choice);
+						esql.executeUpdate(status_change);
+					}
+					else if (choice.equals("n")){
+						return;
+					}
+					else{
+						System.out.println("Unrecgonized Choice!!");
+						prompt_r = 1;
+					}
+					}while(prompt_r == 1);
+				}
+				else if (status.equals("Started")){
+					System.out.println("\tIt has started, want to Change it to Finished?(y/n) ");
+					choice = in.readLine();
+					int prompt_r = 0;
+
+					do{
+					prompt_r = 0;
+					if (choice.equals("y")){
+						status_change = String.format("UPDATE itemStatus SET status = 'Finished' WHERE orderid = '%s' AND itemName = '%s'", orderid, choice);
+						esql.executeUpdate(status_change);
+					}
+					else if (choice.equals("n")){
+						return;
+					}
+					else{
+					System.out.println("Unrecgonized choice");
+					prompt_r = 1;
+					}
+					}while(prompt_r == 1);
+				}
+				else if (status.equals("Finished")){
+					System.out.println("This order has been finished, you cannot change it anymore");
+					return;
+				}
+			}
+		}while(repeat_prompt == 1);
+		}
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage ());
+		return;
+	}
+			
    }//end
 
    public static void ViewOrderHistory(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
+	try{
+		List<List<String>> result_storage = new ArrayList<List<String>>();
+		String Select_query = String.format("SELECT orderid FROM Orders WHERE login = '%s' ORDER BY timeStampRecieved DESC LIMIT 5", authorisedUser);
+		int rowcount = esql.executeQueryAndPrintResult(Select_query);
+		System.out.println("Total row(s): " + rowcount);
+		return;
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage());
+		return;
+	}
+ 
    }//end
 
    public static void UpdateUserInfo(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
+      	try{
+		String update_query = "";
+		System.out.println("What do you want to update?");
+		System.out.println("1.password");
+		System.out.println("2.phone number");
+		System.out.println("3.favorite item");
+	 	int input = readChoice();
+		if (input == 1){
+			System.out.println("Enter the new password: ");
+			String np = in.readLine();
+			update_query = String.format("UPDATE Users SET password = '%s' WHERE login = '%s'",np,authorisedUser);
+			esql.executeUpdate(update_query);
+		}
+		else if (input == 2){
+			System.out.println("Enter the new phone number: ");
+			String nnum = in.readLine();
+			update_query = String.format("UPDATE Users SET phoneNum = '%s' WHERE login = '%s'",nnum,authorisedUser);
+			esql.executeUpdate(update_query);
+		}
+		else if (input == 3){
+			System.out.println("Enter your favorite item: ");
+			String nf = in.readLine();
+			update_query = String.format("UPDATE Users SET favItems = favItems ||' / '||'%s' WHERE login = '%s'",nf,authorisedUser);
+			esql.executeUpdate(update_query);
+		}
+		return;	
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage());
+		return;
+	}
    }//end
 
    public static void ManagerUpdateUserInfo(Cafe esql){
