@@ -544,7 +544,7 @@ public class Cafe {
 							}
 						order_repeat = 0;
 
-						System.out.print("Have any comment on this item?(type 'null' if you have no comment): ");
+						System.out.print("\tHave any comment on this item?(type 'null' if you have no comment): ");
 						String comment = in.readLine();
 						
 						if (itemANDcomment.containsKey(order)){
@@ -693,7 +693,7 @@ public class Cafe {
 										}
 									order_repeat = 0;
 
-									System.out.print("Have any comment on this item?(type 'null' if you have no comment): ");
+									System.out.print("\tHave any comment on this item?(type 'null' if you have no comment): ");
 									String comment = in.readLine();
 									
 									if (itemANDcomment.containsKey(order)){
@@ -724,7 +724,7 @@ public class Cafe {
 										}
 									order_repeat = 0;
 
-									System.out.print("Have any comment on this item?(type 'null' if you have no comment): ");
+									System.out.print("\tHave any comment on this item?(type 'null' if you have no comment): ");
 									String comment = in.readLine();
 									
 									if (itemANDcomment.containsKey(order)){
@@ -807,7 +807,7 @@ public class Cafe {
 	try{//check user type to see what he/she can update
 		int repeat_prompt = 0; //counter to repeat the prompt
 		String status_change = "";
-		System.out.print("\t Do you want to update your own order or someone else's (1=yourself,2=others)?  ");
+		System.out.print("\tDo you want to update your own order or someone else's (1=yourself,2=others)?  ");
 		String choice_1 = in.readLine();
 		if (choice_1.equals("1")){
 			UpdateOrder(esql);
@@ -832,7 +832,7 @@ public class Cafe {
 
 					do{
 					prompt_r = 0;
-					System.out.println("This order has not been paid yet, would you want to change it to paid?(y/n) ");
+					System.out.println("\tThis order has not been paid yet, would you want to change it to paid?(y/n) ");
 					String paid_change = in.readLine();
 					if(paid_change.equals("y")){
 						paid_change = String.format("UPDATE Orders SET paid = 'true' WHERE orderid = '%s'",orderid);	
@@ -849,7 +849,7 @@ public class Cafe {
 				}	
 				String Select_query = String.format("SELECT * FROM ItemStatus I WHERE I.orderid = '%s'", orderid);
 				rowcount = esql.executeQueryAndPrintResult(Select_query); 
-				System.out.println("Which item do you want to update? ");
+				System.out.println("\tWhich item do you want to update? ");
 				String choice = in.readLine();
 				Select_query = String.format("Select status FROM ItemStatus I WHERE I.orderid = '%s' AND I.itemName = '%s'",orderid, choice);
 				result_storage = esql.executeQueryAndReturnResult(Select_query);
@@ -927,28 +927,28 @@ public class Cafe {
    public static void UpdateUserInfo(Cafe esql){
       	try{
 		String update_query = "";
-		System.out.println("What do you want to update?");
-		System.out.println("1.password");
-		System.out.println("2.phone number");
-		System.out.println("3.favorite item");
+		System.out.println("\tWhat do you want to update?");
+		System.out.println("\t1.password");
+		System.out.println("\t2.phone number");
+		System.out.println("\t3.favorite item");
 	 	int input = readChoice();
 		int prompt_r = 0;
 		do{
 		prompt_r = 0;
 		if (input == 1){
-			System.out.println("Enter the new password: ");
+			System.out.println("\tEnter the new password: ");
 			String np = in.readLine();
 			update_query = String.format("UPDATE Users SET password = '%s' WHERE login = '%s'",np,authorisedUser);
 			esql.executeUpdate(update_query);
 		}
 		else if (input == 2){
-			System.out.println("Enter the new phone number: ");
+			System.out.println("\tEnter the new phone number: ");
 			String nnum = in.readLine();
 			update_query = String.format("UPDATE Users SET phoneNum = '%s' WHERE login = '%s'",nnum,authorisedUser);
 			esql.executeUpdate(update_query);
 		}
 		else if (input == 3){
-			System.out.println("Enter your favorite item: ");
+			System.out.println("\tEnter your favorite item: ");
 			String nf = in.readLine();
 			update_query = String.format("UPDATE Users SET favItems = favItems ||' / '||'%s' WHERE login = '%s'",nf,authorisedUser);
 			esql.executeUpdate(update_query);
@@ -958,6 +958,7 @@ public class Cafe {
 			prompt_r = 1;
 		}
 		}while(prompt_r == 1);
+		System.out.println("Update Successfully");
 		return;	
 	}
 	catch(Exception e){
@@ -967,9 +968,58 @@ public class Cafe {
    }//end
 
    public static void ManagerUpdateUserInfo(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
+	try{
+		System.out.println("\tDo you want to update your own info or other users' type?");	
+		System.out.println("\t1. Own info");
+		System.out.println("\t2. Other's type");
+		switch(readChoice()){
+			case 1: UpdateUserInfo(esql);
+			case 2: 
+				String update_query = "";
+				String login = "";
+				int prompt_r = 0;
+				do{
+					prompt_r = 0;
+					do{
+						System.out.println("\tEnter the loggin name that you want to update: ");
+						login = in.readLine();
+						String select_query = String.format("SELECT * FROM Users U WHERE U.login = '%s'", login);
+						int rowcount = esql.executeQuery(select_query);
+						if (rowcount == 0){
+							System.out.println("Sorry we cannot find the username you are looking for.");
+							prompt_r = 1;
+						}
+						else{
+							prompt_r = 0;
+						}
+					}while(prompt_r == 1);
+					System.out.println("\tWhat do you want to update that user's type to?");
+					String newtype = in.readLine();
+					if (newtype.equals("Manager")){
+						update_query = String.format("UPDATE Users SET type = '%s' WHERE login = '%s'", newtype, login);
+						esql.executeUpdate(update_query);	
+					}
+					else if (newtype.equals("Employee")){	
+						update_query = String.format("UPDATE Users SET type = '%s' WHERE login = '%s'", newtype, login);
+						esql.executeUpdate(update_query);	
+					}
+					else if (newtype.equals("Customer")){	
+						update_query = String.format("UPDATE Users SET type = '%s' WHERE login = '%s'", newtype, login);
+						esql.executeUpdate(update_query);		
+					}
+					else{
+						System.out.println("Unrecognized type!!");
+						prompt_r = 1;
+					}
+				}while(prompt_r == 1);
+			System.out.println("Update Successfully");		
+		}
+		return;
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage());
+		return;
+	}
    }//end
 
    public static void UpdateMenu(Cafe esql){
