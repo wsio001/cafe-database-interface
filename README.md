@@ -7,3 +7,4 @@
 # ManagerUpdateUserInfo: Manager can now update it's info and other's ueser type
 # UpdateMenu: Manager can now modify the menu
 # ViewOrderStatus: User can view orderid that is only in his name, while Manager/employee can view any orderid
+# ViewCurrentOrder: Manager/Employee can now see all the unpaid orders that are within 24 hours

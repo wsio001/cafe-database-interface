@@ -1318,9 +1318,16 @@ public class Cafe {
    }//end
 
    public static void ViewCurrentOrder(Cafe esql){
-      // Your code goes here.
-      // ...
-      // ...
+	try{
+		String select_query = String.format("SELECT orderid, login, timeStampRecieved, total FROM Orders WHERE paid = 'false' AND timeStampRecieved >= NOW() - '1 day'::INTERVAL");
+		int rowcount = esql.executeQueryAndPrintResult(select_query);
+		System.out.println("Total row(s): " + rowcount);
+		return;
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage());
+		return;
+	}
    }//end
 
    public static void Query6(Cafe esql){
