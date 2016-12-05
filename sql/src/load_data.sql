@@ -6,12 +6,13 @@ COPY USERS
 FROM 'users.csv'
 WITH DELIMITER ';';
 
-COPY ORDERS
-FROM 'orders.csv'
-WITH DELIMITER ';';
+/*COPY ORDERS
+*FROM 'orders.csv'
+*WITH DELIMITER ';';
+*/
 ALTER SEQUENCE orders_orderid_seq RESTART 87257;
 
-COPY ITEMSTATUS
-FROM 'itemStatus.csv'
-WITH DELIMITER ';';
-
+/*COPY ITEMSTATUS
+*FROM 'itemStatus.csv'
+*WITH DELIMITER ';';
+*/
